@@ -7,6 +7,8 @@
 import json
 import os.path
 import sys
+import smtplib
+from email.message import EmailMessage
 from ygo_api import YgoApi
 
 base_url = "http://yugiohprices.com/api/"
@@ -47,5 +49,31 @@ with open(filename, 'r') as wishlist:
                         hit = entry
             notif_string = "Found " + card_name + " in rarity " + hit["rarity"] + " for $" + str(lowest_found)
             notifs.append(notif_string)
-print(notifs)
-print(errors)
+
+'''
+Handle email sending
+'''
+if len(notifs) > 0:
+    sender = "noreply@kame-game.net"
+    recipient = "test@example.org"
+    subject = "Yu-Gi-Oh Price Alert"
+    body = "Subject: " + subject + "\n"
+    for item in notifs:
+        body = body + item + "\n"
+    body = body + "\nSincerely,\nKame Game Staff"
+
+    msg = EmailMessage()
+    msg['From'] = sender
+    msg['To'] = recipient
+    msg['Subject'] = subject
+
+    try:
+        server = smtplib.SMTP('localhost')
+        server.sendmail(sender, recipient, body)
+        server.quit()
+        print("Notification sent")
+    except Exception:
+        print(sys.exc_info())
+        print("Connection error. Exiting...")
+else:
+    print("Nothing to report")
